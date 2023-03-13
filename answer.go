@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
@@ -49,28 +50,47 @@ func main() {
 	// this is for maps
 	// it also supports the c way of for loops
 	// use underscore for the first parameter because don't need the index
-	var i string
+
+	correct := 0
+	incorrect := 0
 
 	for _, row := range rows {
 		equation := row[0]
 		corr_ans := row[1]
 
-		// query user for their answer
-		fmt.Printf("What is %s ? ", equation)
-		fmt.Scan(&i)
+		// why the arrow sign? This is basically pushing the start button on the timer
+		timer := time.NewTimer(5 * time.Second)
 
-		if i == corr_ans {
-			fmt.Println("You are correct!")
-		} else {
-			fmt.Println("You are incorrect!")
-			fmt.Printf("The equation %s has the answer %s\n", equation, corr_ans)
+		fmt.Printf("%s = ", equation)
+
+		var input string
+		done := make(chan bool)
+
+		
+		go func() {
+			fmt.Scanln(&input)
+			done <- true
+		}()
+
+		select {
+		case <- done:
+			if (input == corr_ans) {
+				fmt.Printf("Correct!\n")
+				correct++
+			} else {
+				fmt.Printf("Incorrect!\n")
+				incorrect++
+			}
+			timer.Reset(5 * time.Second)
+		case <-timer.C:
+			fmt.Println("\nYou took too long to answer.Exiting program...")
+			os.Exit(0)
 		}
 	}
 
-
-
-	// now that the corresponding answer
-
+	// show how many they got right/wrong
+	fmt.Printf("You got %d questions right\n", correct)
+	fmt.Printf("You got %d questions wrong\n", incorrect)
 
 }
 
